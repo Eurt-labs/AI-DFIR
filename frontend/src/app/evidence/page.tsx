@@ -1,0 +1,1 @@
+export default function Evidence() { return <div className="p-8"><h1 className="text-2xl font-bold">Evidence Browser</h1></div>; }
