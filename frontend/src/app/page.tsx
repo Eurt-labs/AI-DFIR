@@ -1,153 +1,371 @@
 "use client";
 
-import { Activity, ShieldAlert, Cpu, Network, AlertOctagon, Terminal, FileSearch } from "lucide-react";
+import {
+  Activity,
+  ShieldAlert,
+  Cpu,
+  Network,
+  AlertOctagon,
+  Terminal,
+  FileSearch,
+  Brain,
+  Shield,
+  Bug,
+  Workflow,
+  Database,
+  Lock,
+  HardDrive,
+  Search,
+} from "lucide-react";
+
+/* ── TCS Scale from the portfolio ── */
+const TCS_SCALE = [
+  { range: "0.0 – 0.3", label: "LOW RISK", action: "LEGITIMATE", color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  { range: "0.3 – 0.6", label: "MEDIUM RISK", action: "TRIAGE REQUIRED", color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  { range: "0.6 – 0.8", label: "HIGH RISK", action: "SENIOR ESCALATE", color: "text-orange-400", bg: "bg-orange-500/10" },
+  { range: "0.8 – 1.0", label: "CRITICAL", action: "INCIDENT RESPONSE", color: "text-pink-400", bg: "bg-pink-500/10" },
+];
+
+/* ── All 6 ML Models from portfolio ── */
+const ML_SCORES = [
+  { name: "Bayesian Probability", score: 0.87, icon: Network, color: "text-cyan-400" },
+  { name: "Gaussian Anomaly (GMM)", score: 0.82, icon: Activity, color: "text-pink-400" },
+  { name: "Euclidean Distance", score: 0.64, icon: Shield, color: "text-purple-400" },
+  { name: "Logistic Regression", score: 0.68, icon: Bug, color: "text-orange-400" },
+  { name: "Shannon Entropy", score: 0.21, icon: FileSearch, color: "text-emerald-400" },
+  { name: "Time-Series Decomp", score: 0.45, icon: Workflow, color: "text-cyan-400" },
+];
+
+/* ── 5-Layer Architecture Status from portfolio ── */
+const ARCHITECTURE_LAYERS = [
+  { layer: "L5", name: "Forensic Analyst Portal", status: "ACTIVE", tools: "Flask Dashboard · Kibana Timelines", color: "text-pink-400", statusColor: "bg-pink-500/10 text-pink-400" },
+  { layer: "L4", name: "AI Intelligence Engine", status: "ACTIVE", tools: "GMM · Bayesian · Shannon · Time-Series", color: "text-cyan-400", statusColor: "bg-cyan-500/10 text-cyan-400" },
+  { layer: "L3", name: "Correlation & Threat Scoring", status: "ACTIVE", tools: "Bayesian TCS Module", color: "text-emerald-400", statusColor: "bg-emerald-500/10 text-emerald-400" },
+  { layer: "L2", name: "Forensic Analysis Modules", status: "RUNNING", tools: "Volatility 3 · Autopsy · Scapy · YARA", color: "text-pink-400", statusColor: "bg-yellow-500/10 text-yellow-400" },
+  { layer: "L1", name: "Artifact Collection Engine", status: "COMPLETE", tools: "Logs · RAM · Registry · Sysmon · SQLite", color: "text-cyan-400", statusColor: "bg-emerald-500/10 text-emerald-400" },
+];
+
+/* ── 7-Phase Workflow from portfolio ── */
+const WORKFLOW_PHASES = [
+  { phase: 1, name: "Identification", status: "done" },
+  { phase: 2, name: "Preservation", status: "done" },
+  { phase: 3, name: "Collection", status: "done" },
+  { phase: 4, name: "Examination", status: "active" },
+  { phase: 5, name: "Analysis", status: "active" },
+  { phase: 6, name: "Presentation", status: "pending" },
+  { phase: 7, name: "Response", status: "pending" },
+];
+
+/* ── 9 Artifact Collection Status ── */
+const ARTIFACT_STATUS = [
+  { name: "System Logs", icon: Database, parsed: 12480, status: "done" },
+  { name: "Browser History", icon: Search, parsed: 3241, status: "done" },
+  { name: "Registry Hives", icon: Lock, parsed: 847, status: "done" },
+  { name: "RAM Dumps", icon: Cpu, parsed: 1, status: "active" },
+  { name: "Network PCAP", icon: Network, parsed: 24581, status: "active" },
+  { name: "File Metadata", icon: HardDrive, parsed: 9812, status: "done" },
+  { name: "Process Traces", icon: Activity, parsed: 2103, status: "done" },
+  { name: "Shell Logs", icon: Terminal, parsed: 456, status: "done" },
+  { name: "USB Registers", icon: Shield, parsed: 14, status: "done" },
+];
+
+/* ── Engine log lines ── */
+const LOG_LINES = [
+  { time: "10:42:01", text: "$ volatility3 -f memory.raw windows.pslist", type: "cmd" },
+  { time: "10:42:05", text: "[INFO] Scanning 847 processes... 12 suspicious PIDs flagged", type: "info" },
+  { time: "10:42:08", text: "CRITICAL: mimikatz_v2 signature found in PID 4012!", type: "critical" },
+  { time: "10:42:10", text: "$ python3 GMM_anomaly_detector.py --model gmm --data sysmon.json", type: "cmd" },
+  { time: "10:42:12", text: "[INFO] GMM Fit: K=8 components, AUC=0.964", type: "info" },
+  { time: "10:42:15", text: "$ yara -r /rules/apt_signatures.yar /evidence/", type: "cmd" },
+  { time: "10:42:18", text: "CRITICAL: cobaltstrike_beacon signature found in PID 1102!", type: "critical" },
+  { time: "10:42:20", text: "[SYSTEM] Evaluating Probability Networks...", type: "system" },
+  { time: "10:42:22", text: "$ python3 bayes_network.py --evidence sysmon", type: "cmd" },
+  { time: "10:42:25", text: "[INFO] Hypothesis likelihood ratio: 423.8", type: "info" },
+  { time: "10:42:28", text: "[SYSTEM] SP 800-86 report generated successfully.", type: "system" },
+];
 
 export default function Dashboard() {
+  const currentTCS = 0.75;
+
   return (
-    <div className="p-8 space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold font-[var(--font-space-grotesk)] text-white">Investigation Overview</h1>
-        <p className="text-white/50 text-sm mt-1">Real-time telemetry and Threat Confidence Scoring</p>
+    <div className="p-6 lg:p-8 space-y-6 overflow-y-auto">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-[var(--font-space-grotesk)] text-white">Investigation Overview</h1>
+          <p className="text-white/50 text-sm mt-1">Real-time telemetry · NIST SP 800-86 aligned · 6 ML models active</p>
+        </div>
+        <div className="flex gap-2 text-[10px] font-mono">
+          <span className="px-3 py-1.5 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20 animate-pulse">
+            TCS: {currentTCS.toFixed(2)} — HIGH RISK
+          </span>
+        </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* ── Quick Stats Row ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Active Alerts", value: "14", icon: ShieldAlert, color: "text-pink-500", bg: "bg-pink-500/10" },
-          { label: "Files Analyzed", value: "24,581", icon: FileSearch, color: "text-cyan-400", bg: "bg-cyan-500/10" },
-          { label: "Network Pkt/s", value: "3,412", icon: Network, color: "text-purple-400", bg: "bg-purple-500/10" },
-          { label: "System Load", value: "42%", icon: Cpu, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+          { label: "Evidence Parsed", value: "53,535", icon: FileSearch, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+          { label: "Traffic Velocity", value: "3,412 Pkt/s", icon: Network, color: "text-purple-400", bg: "bg-purple-500/10" },
+          { label: "CPU Intel", value: "42.1%", icon: Cpu, color: "text-emerald-400", bg: "bg-emerald-500/10" },
         ].map((stat, i) => (
-          <div key={i} className="bg-neutral-900/50 border border-white/5 rounded-xl p-5 flex items-center justify-between">
+          <div key={i} className="bg-neutral-900/50 border border-white/5 rounded-xl p-4 flex items-center justify-between">
             <div>
-              <p className="text-white/40 text-xs font-mono uppercase mb-1">{stat.label}</p>
-              <p className="text-2xl font-bold font-[var(--font-space-mono)]">{stat.value}</p>
+              <p className="text-white/40 text-[10px] font-mono uppercase tracking-wider mb-1">{stat.label}</p>
+              <p className="text-xl font-bold font-[var(--font-space-mono)]">{stat.value}</p>
             </div>
-            <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${stat.bg} ${stat.color}`}>
-              <stat.icon size={20} />
+            <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${stat.bg} ${stat.color}`}>
+              <stat.icon size={18} />
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Main Threat Score Area */}
-        <div className="lg:col-span-2 bg-neutral-900/50 border border-white/5 rounded-xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          
-          <div className="flex justify-between items-start mb-6">
+      {/* ── Row 2: TCS Dial + 6 ML Model Scores ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* TCS Dial with Scale */}
+        <div className="lg:col-span-5 bg-neutral-900/50 border border-white/5 rounded-xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+
+          <div className="flex justify-between items-start mb-5">
             <div>
-              <h2 className="text-lg font-bold">Threat Confidence Score (TCS)</h2>
-              <p className="text-xs text-white/40">Bayesian Probability calculated across all active modules</p>
+              <h2 className="text-base font-bold">Threat Confidence Score</h2>
+              <p className="text-[10px] text-white/40 font-mono mt-0.5">Bayesian Posterior · Weighted Evidence</p>
             </div>
-            <span className="px-3 py-1 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-[10px] rounded-full font-mono animate-pulse">
-              HIGH RISK
-            </span>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-8 items-center justify-center flex-1">
-            {/* Circular Dial Mockup */}
-            <div className="relative flex items-center justify-center w-48 h-48 rounded-full border-8 border-neutral-800">
-              <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                <circle cx="88" cy="88" r="80" fill="none" stroke="currentColor" strokeWidth="16" className="text-neutral-800" />
-                <circle cx="88" cy="88" r="80" fill="none" stroke="currentColor" strokeWidth="16" strokeDasharray="502" strokeDashoffset="125" className="text-pink-500 transition-all duration-1000 ease-out" strokeLinecap="round" />
+          {/* Dial */}
+          <div className="flex items-center gap-6 mb-5">
+            <div className="relative flex items-center justify-center w-32 h-32 shrink-0">
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 128 128">
+                <circle cx="64" cy="64" r="56" fill="none" stroke="currentColor" strokeWidth="12" className="text-neutral-800" />
+                <circle cx="64" cy="64" r="56" fill="none" stroke="currentColor" strokeWidth="12" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - currentTCS)} className="text-pink-500 transition-all duration-1000 ease-out" strokeLinecap="round" />
               </svg>
               <div className="text-center z-10">
-                <span className="block text-4xl font-black font-[var(--font-space-mono)]">0.75</span>
-                <span className="text-[10px] text-white/30 tracking-widest mt-1 block">TCS SCORE</span>
+                <span className="block text-3xl font-black font-[var(--font-space-mono)]">{currentTCS.toFixed(2)}</span>
+                <span className="text-[8px] text-white/30 tracking-widest block mt-0.5">TCS</span>
               </div>
             </div>
 
-            <div className="flex-1 space-y-4 font-mono text-xs w-full max-w-[240px]">
-              <div className="flex justify-between items-center p-3 rounded bg-black/40 border border-white/5">
-                <span className="text-white/60">Gaussian Anomaly</span>
-                <span className="text-pink-400 font-bold">0.82</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded bg-black/40 border border-white/5">
-                <span className="text-white/60">Logistic Classifier</span>
-                <span className="text-orange-400 font-bold">0.68</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded bg-black/40 border border-white/5">
-                <span className="text-white/60">Shannon Entropy</span>
-                <span className="text-emerald-400 font-bold">0.21</span>
-              </div>
+            {/* Scale */}
+            <div className="flex-1 space-y-1.5 font-mono text-[10px]">
+              {TCS_SCALE.map((s, i) => (
+                <div key={i} className={`flex justify-between items-center p-1.5 px-2.5 rounded ${currentTCS >= parseFloat(s.range.split(" – ")[0]) && currentTCS <= parseFloat(s.range.split(" – ")[1]) ? "bg-white/5 border border-white/10" : ""}`}>
+                  <span className="text-white/50">{s.range}</span>
+                  <span className={`${s.color} font-bold`}>{s.action}</span>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Live Terminal / Module Status */}
-        <div className="bg-black border border-white/10 rounded-xl flex flex-col overflow-hidden min-h-[360px]">
-          <div className="px-4 py-3 border-b border-white/5 bg-neutral-950 flex items-center gap-2 shrink-0">
-            <Terminal size={14} className="text-white/40" />
-            <h3 className="text-xs font-mono text-white/60 uppercase tracking-widest">Engine Logs</h3>
-          </div>
-          <div className="p-4 font-mono text-[11px] text-cyan-400 flex-1 space-y-3 overflow-y-auto leading-relaxed">
-            <p><span className="text-white/30">[10:42:01]</span> Starting Volatility 3...</p>
-            <p><span className="text-white/30">[10:42:05]</span> <span className="text-pink-400">[WARN]</span> Hidden process found (PID 4012)</p>
-            <p><span className="text-white/30">[10:42:10]</span> Running Scapy packet analysis...</p>
-            <p><span className="text-white/30">[10:42:12]</span> 847 packets parsed.</p>
-            <p><span className="text-white/30">[10:42:15]</span> <span className="text-emerald-400">[OK]</span> No DNS tunneling detected.</p>
-            <p><span className="text-white/30">[10:42:20]</span> Running Bayesian update...</p>
-            <p className="animate-pulse"><span className="text-white/30">[10:42:22]</span> Awaiting next sweep...</p>
+          <div className="p-2.5 bg-black/50 rounded-lg border border-cyan-500/10 font-mono text-[10px] text-cyan-400/80 text-center">
+            TCS = ∑ (Evidence_Weightᵢ × Bayesian_Posteriorᵢ) / Total_Evidence_Count
           </div>
         </div>
 
+        {/* 6 ML Model Scores Grid */}
+        <div className="lg:col-span-7 bg-neutral-900/50 border border-white/5 rounded-xl p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="text-base font-bold">ML Intelligence Engine</h2>
+              <p className="text-[10px] text-white/40 font-mono mt-0.5">6 Models · Real-time scoring</p>
+            </div>
+            <Brain size={16} className="text-white/20" />
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {ML_SCORES.map((model, i) => (
+              <div key={i} className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2">
+                <div className="flex items-center gap-2">
+                  <model.icon size={12} className={model.color} />
+                  <span className="text-[10px] font-mono text-white/60 truncate">{model.name}</span>
+                </div>
+                <div className="flex items-end justify-between">
+                  <span className={`text-lg font-black font-[var(--font-space-mono)] ${model.score > 0.7 ? "text-pink-400" : model.score > 0.5 ? "text-orange-400" : "text-emerald-400"}`}>
+                    {model.score.toFixed(2)}
+                  </span>
+                </div>
+                <div className="w-full h-1 bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${model.score > 0.7 ? "bg-pink-500" : model.score > 0.5 ? "bg-orange-400" : "bg-emerald-500"}`}
+                    style={{ width: `${model.score * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Active Alerts Table */}
+      {/* ── Row 3: 5-Layer Architecture Status + Engine Logs ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* 5-Layer Stack */}
+        <div className="lg:col-span-5 bg-neutral-900/50 border border-white/5 rounded-xl p-6">
+          <h2 className="text-base font-bold mb-1">5-Layer Architecture</h2>
+          <p className="text-[10px] text-white/40 font-mono mb-4">Modular stack status</p>
+
+          <div className="space-y-2">
+            {ARCHITECTURE_LAYERS.map((layer, i) => (
+              <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-black/30 border border-white/5">
+                <div className="flex items-center gap-3">
+                  <span className={`text-[10px] font-mono font-bold ${layer.color}`}>{layer.layer}</span>
+                  <div>
+                    <p className="text-xs font-medium text-white/80">{layer.name}</p>
+                    <p className="text-[9px] font-mono text-white/30 mt-0.5">{layer.tools}</p>
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold ${layer.statusColor}`}>
+                  {layer.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Engine Logs Terminal */}
+        <div className="lg:col-span-7 bg-black border border-white/10 rounded-xl flex flex-col overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/5 bg-neutral-950 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <Terminal size={14} className="text-white/40" />
+              <h3 className="text-[10px] font-mono text-white/60 uppercase tracking-widest">Diagnostic Logger</h3>
+            </div>
+            <span className="text-[9px] font-mono text-white/20">NIST SP 800-86</span>
+          </div>
+          <div className="p-4 font-mono text-[11px] flex-1 space-y-1.5 overflow-y-auto leading-relaxed max-h-[280px]">
+            {LOG_LINES.map((line, i) => {
+              let colorClass = "text-white/45";
+              if (line.type === "cmd") colorClass = "text-cyan-400 font-semibold";
+              else if (line.type === "critical") colorClass = "text-pink-400 font-bold";
+              else if (line.type === "system") colorClass = "text-emerald-400";
+              return (
+                <p key={i} className={colorClass}>
+                  <span className="text-white/20 mr-2">[{line.time}]</span>
+                  {line.text}
+                </p>
+              );
+            })}
+            <p className="text-white/20 animate-pulse">▌</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 4: 7-Phase Workflow + 9 Artifact Collection Status ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* 7-Phase Pipeline */}
+        <div className="lg:col-span-5 bg-neutral-900/50 border border-white/5 rounded-xl p-6">
+          <h2 className="text-base font-bold mb-1">Investigation Pipeline</h2>
+          <p className="text-[10px] text-white/40 font-mono mb-4">7-Phase NIST workflow</p>
+
+          <div className="space-y-1.5">
+            {WORKFLOW_PHASES.map((phase) => (
+              <div key={phase.phase} className={`flex items-center justify-between p-2.5 rounded-lg border ${phase.status === "active" ? "bg-cyan-500/5 border-cyan-500/20" : phase.status === "done" ? "bg-black/20 border-white/5" : "bg-black/10 border-white/[0.03]"}`}>
+                <div className="flex items-center gap-3">
+                  <span className={`w-5 h-5 rounded text-[10px] font-mono font-bold flex items-center justify-center ${phase.status === "active" ? "bg-cyan-500/20 text-cyan-400" : phase.status === "done" ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/20"}`}>
+                    {phase.status === "done" ? "✓" : phase.phase}
+                  </span>
+                  <span className={`text-xs font-medium ${phase.status === "active" ? "text-cyan-400" : phase.status === "done" ? "text-white/60" : "text-white/25"}`}>
+                    Phase {phase.phase}: {phase.name}
+                  </span>
+                </div>
+                <span className={`text-[9px] font-mono font-bold ${phase.status === "active" ? "text-cyan-400 animate-pulse" : phase.status === "done" ? "text-emerald-400/60" : "text-white/15"}`}>
+                  {phase.status === "active" ? "RUNNING" : phase.status === "done" ? "DONE" : "PENDING"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 9 Artifact Collection Grid */}
+        <div className="lg:col-span-7 bg-neutral-900/50 border border-white/5 rounded-xl p-6">
+          <h2 className="text-base font-bold mb-1">Artifact Collection Engine</h2>
+          <p className="text-[10px] text-white/40 font-mono mb-4">9 forensic categories · parallel extraction</p>
+
+          <div className="grid grid-cols-3 gap-2">
+            {ARTIFACT_STATUS.map((art, i) => (
+              <div key={i} className={`p-3 rounded-lg border ${art.status === "active" ? "bg-cyan-500/5 border-cyan-500/15" : "bg-black/20 border-white/5"}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <art.icon size={12} className={art.status === "active" ? "text-cyan-400" : "text-white/30"} />
+                  <span className="text-[10px] font-mono text-white/60 truncate">{art.name}</span>
+                </div>
+                <div className="flex items-end justify-between">
+                  <span className="text-sm font-bold font-[var(--font-space-mono)] text-white/80">
+                    {art.parsed.toLocaleString()}
+                  </span>
+                  {art.status === "active" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  )}
+                  {art.status === "done" && (
+                    <span className="text-[8px] font-mono text-emerald-400/60">✓</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 5: Recent Critical Alerts ── */}
       <div className="bg-neutral-900/50 border border-white/5 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center">
-          <h2 className="text-lg font-bold">Recent Anomalies</h2>
-          <button className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors uppercase tracking-widest border border-cyan-400/20 px-3 py-1.5 rounded bg-cyan-400/10">View All</button>
+          <h2 className="text-base font-bold">Recent Critical Anomalies</h2>
+          <a href="/alerts" className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors uppercase tracking-widest border border-cyan-400/20 px-3 py-1.5 rounded bg-cyan-400/10">
+            View All Alerts
+          </a>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-black/40 text-white/40 text-[10px] font-mono uppercase tracking-wider">
               <tr>
-                <th className="px-6 py-4 font-medium">Severity</th>
-                <th className="px-6 py-4 font-medium">Indicator</th>
-                <th className="px-6 py-4 font-medium">Module Source</th>
-                <th className="px-6 py-4 font-medium">Time</th>
+                <th className="px-6 py-3 font-medium">Severity</th>
+                <th className="px-6 py-3 font-medium">Indicator</th>
+                <th className="px-6 py-3 font-medium">Module Source</th>
+                <th className="px-6 py-3 font-medium">MITRE ATT&CK</th>
+                <th className="px-6 py-3 font-medium">Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-white/70">
               <tr className="hover:bg-white/[0.02] transition-colors group">
-                <td className="px-6 py-4">
+                <td className="px-6 py-3">
                   <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-pink-500/10 text-pink-400 text-[10px] font-mono font-bold tracking-wider">
-                    <AlertOctagon size={12} /> CRITICAL
+                    <AlertOctagon size={10} /> CRITICAL
                   </span>
                 </td>
-                <td className="px-6 py-4 font-mono text-[13px] text-white group-hover:text-cyan-400 transition-colors">svchost.exe (PID 4012) Unbacked Memory</td>
-                <td className="px-6 py-4 text-xs">Volatility 3 (malfind)</td>
-                <td className="px-6 py-4 text-white/40 text-xs">2 mins ago</td>
+                <td className="px-6 py-3 font-mono text-xs text-white group-hover:text-cyan-400 transition-colors">mimikatz_v2 signature in PID 4012</td>
+                <td className="px-6 py-3 text-[11px]">YARA + Volatility 3</td>
+                <td className="px-6 py-3 text-[11px] font-mono text-cyan-400/70">TA0006</td>
+                <td className="px-6 py-3 text-white/40 text-[11px]">3 mins ago</td>
               </tr>
               <tr className="hover:bg-white/[0.02] transition-colors group">
-                <td className="px-6 py-4">
+                <td className="px-6 py-3">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-pink-500/10 text-pink-400 text-[10px] font-mono font-bold tracking-wider">
+                    <AlertOctagon size={10} /> CRITICAL
+                  </span>
+                </td>
+                <td className="px-6 py-3 font-mono text-xs text-white group-hover:text-cyan-400 transition-colors">cobaltstrike_beacon in PID 1102</td>
+                <td className="px-6 py-3 text-[11px]">YARA + Scapy Beacon</td>
+                <td className="px-6 py-3 text-[11px] font-mono text-cyan-400/70">TA0011</td>
+                <td className="px-6 py-3 text-white/40 text-[11px]">8 mins ago</td>
+              </tr>
+              <tr className="hover:bg-white/[0.02] transition-colors group">
+                <td className="px-6 py-3">
                   <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-orange-500/10 text-orange-400 text-[10px] font-mono font-bold tracking-wider">
-                    <ShieldAlert size={12} /> HIGH
+                    <ShieldAlert size={10} /> HIGH
                   </span>
                 </td>
-                <td className="px-6 py-4 font-mono text-[13px] text-white group-hover:text-cyan-400 transition-colors">Outbound SMB Connection 10.0.0.45</td>
-                <td className="px-6 py-4 text-xs">Scapy + Gaussian Engine</td>
-                <td className="px-6 py-4 text-white/40 text-xs">15 mins ago</td>
-              </tr>
-              <tr className="hover:bg-white/[0.02] transition-colors group">
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 text-[10px] font-mono font-bold tracking-wider">
-                    <Activity size={12} /> MEDIUM
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-mono text-[13px] text-white group-hover:text-cyan-400 transition-colors">High Entropy File: document.pdf.enc</td>
-                <td className="px-6 py-4 text-xs">Shannon Entropy Check</td>
-                <td className="px-6 py-4 text-white/40 text-xs">1 hour ago</td>
+                <td className="px-6 py-3 font-mono text-xs text-white group-hover:text-cyan-400 transition-colors">Lateral SMB to 10.0.0.45</td>
+                <td className="px-6 py-3 text-[11px]">Scapy + Gaussian Engine</td>
+                <td className="px-6 py-3 text-[11px] font-mono text-cyan-400/70">TA0008</td>
+                <td className="px-6 py-3 text-white/40 text-[11px]">15 mins ago</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
   );
 }
