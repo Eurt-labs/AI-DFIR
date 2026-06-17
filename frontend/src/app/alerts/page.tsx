@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertOctagon, ShieldAlert, Activity, Network, Terminal, FileSearch, Cpu, Lock } from "lucide-react";
+import { AlertOctagon, ShieldAlert, Activity } from "lucide-react";
 
 const ALERTS_DATA = [
   {

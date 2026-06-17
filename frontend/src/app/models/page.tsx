@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Brain, Cpu, Database, FileSearch, Network, Shield, Terminal, Bug, Workflow } from "lucide-react";
+import { Activity, FileSearch, Network, Shield, Bug, Workflow } from "lucide-react";
 
 const ML_MODELS = [
   {

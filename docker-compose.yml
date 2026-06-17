@@ -1,0 +1,79 @@
+# AI-DFIR Docker Compose — Data Ingestion & Storage Pipeline
+# Phase 2: ELK Stack + FastAPI Backend
+
+services:
+  # ── Elasticsearch ──
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: dfir-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - cluster.name=dfir-cluster
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    networks:
+      - dfir-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  # ── Kibana ──
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: dfir-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    ports:
+      - "5601:5601"
+    networks:
+      - dfir-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # ── FastAPI Backend ──
+  dfir-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dfir-api
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - KIBANA_URL=http://kibana:5601
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - api-uploads:/app/uploads
+    networks:
+      - dfir-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  es-data:
+    driver: local
+  api-uploads:
+    driver: local
+
+networks:
+  dfir-network:
+    driver: bridge

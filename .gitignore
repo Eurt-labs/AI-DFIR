@@ -1,1 +1,27 @@
 Public/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+*.egg
+dist/
+build/
+venv/
+.venv/
+*.env
+
+# Backend uploads
+backend/uploads/
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Orbitron, Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import AppShell from "@/components/AppShell";
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
@@ -22,7 +21,8 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: "AI-DFIR Platform",
-  description: "AI-Assisted Digital Forensics Dashboard",
+  description:
+    "AI-Assisted Digital Forensics & Cyber Threat Investigation Dashboard — NIST SP 800-86 aligned, 6 ML models, 9 artifact categories",
 };
 
 export default function RootLayout({
@@ -36,13 +36,7 @@ export default function RootLayout({
       className={`${orbitron.variable} ${spaceGrotesk.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="h-full flex bg-black text-white overflow-hidden">
-        <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Header />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
-        </div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
