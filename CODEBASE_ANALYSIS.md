@@ -41,11 +41,13 @@ AI-DFIR/
 └── frontend/
     ├── package.json                  # NPM packages, dependencies, and build commands
     ├── tsconfig.json                 # TypeScript compiler setup
-    ├── next.config.ts                # Next.js configurations
+    ├── next.config.ts                # Next.js configurations & API proxy rewrites
     ├── postcss.config.mjs            # PostCSS tailwind integration
     ├── eslint.config.mjs             # ESLint code linting configurations
     ├── AGENTS.md                     # Next.js agent execution rules
     └── src/
+        ├── lib/
+        │   └── api.ts                # Centralized typed API client for backend communication
         ├── app/                      # App router page folders
         │   ├── globals.css           # Global cyberpunk glassmorphic theme styling rules
         │   ├── layout.tsx            # Base HTML page template, fonts, and metadata setup
@@ -243,6 +245,19 @@ FastAPI endpoint routes that expose pipeline controls and query interfaces.
 ### 📄 [frontend/tsconfig.json](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/tsconfig.json)
 *   **Purpose:** Configures the TypeScript compiler, enabling alias paths (e.g. `@/*` maps to `src/*`).
 
+### 📄 [frontend/next.config.ts](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/next.config.ts)
+*   **Purpose:** Next.js framework configuration.
+*   **Key Section Breakdown:**
+    *   **`rewrites`:** Proxies `/api/*` requests to the FastAPI backend (`http://localhost:8000/api/*`) to bypass CORS restrictions during development.
+
+### 📁 frontend/src/lib/
+#### 📄 [api.ts](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/lib/api.ts)
+*   **Purpose:** Centralized API client connecting the frontend UI to the FastAPI backend.
+*   **Key Section Breakdown:**
+    *   **Types:** Interfaces for `HealthResponse`, `PipelineStatus`, `IngestResult`, and search hits.
+    *   **Helpers:** `fetchJSON` wrapper that gracefully catches errors and returns fallback offline data instead of crashing the UI.
+    *   **Endpoints:** Wrappers for `/health`, `/pipeline/status`, `/pipeline/ingest`, `/artifacts/categories`, and `/artifacts/search`.
+
 ### 📄 [frontend/src/app/globals.css](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/app/globals.css) (269 Lines)
 *   **Purpose:** Central stylesheet defining animations and custom cyberpunk themes.
 *   **Key Section Breakdown:**
@@ -270,13 +285,13 @@ Reusable UI layout elements shared across pages.
     *   **Lines 24-30:** Renders `Sidebar` using transform translations for smooth transitions.
     *   **Lines 33-39:** Renders `Header` alongside scrollable main containers.
 
-#### 📄 [Header.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/components/Header.tsx) (174 Lines)
-*   **Purpose:** Header bar containing status indicators, search inputs, and alert logs.
+#### 📄 [Header.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/components/Header.tsx)
+*   **Purpose:** Header bar containing status indicators, real-time search inputs, and alert logs.
 *   **Key Section Breakdown:**
     *   **Lines 6-28 (`RECENT_NOTIFICATIONS`):** Mock data for critical and high notifications.
-    *   **Lines 69-84:** Fuzzy search input field.
-    *   **Lines 90-96:** Glowing active status dot ("SYSTEM ONLINE").
-    *   **Lines 99-153 (`BellDropdown`):** Notification dropdown. Renders list arrays, severity tags, and details on click.
+    *   **Search Engine:** Fuzzy search input field that hits the `GET /api/artifacts/search` backend endpoint with a 350ms debounce, rendering real indexed documents in a dropdown.
+    *   **Status Indicators:** Glowing active status dot ("SYSTEM ONLINE").
+    *   **`BellDropdown`:** Notification dropdown. Renders list arrays, severity tags, and details on click.
 
 #### 📄 [Sidebar.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/components/Sidebar.tsx) (107 Lines)
 *   **Purpose:** Sidebar containing navigation links and logo.
@@ -292,6 +307,7 @@ Dashboard views and diagnostic modules.
 *   **Purpose:** The main overview dashboard. Shows active indicators, threat metrics, logs, and workflow pipelines.
 *   **Key Section Breakdown:**
     *   **Lines 29-53 (`useCounter`):** Custom hook that implements numeric count-up animations using easing functions.
+    *   **Live Data:** Fetches live index statistics from the backend (`GET /api/pipeline/status`) to populate the real "Evidence Parsed" document count, auto-refreshing every 30 seconds.
     *   **Lines 121-167 (`AnimatedStatCard`):** Card component that applies the count-up hook to metrics (Alerts, PCAP Pkt/s, CPU).
     *   **Lines 170-230 (`LiveTerminal`):** Interactive diagnostic logger. Uses interval timers to simulate a live console feed, displaying parsed commands and system anomalies (Lines 102-118).
     *   **Lines 233-674 (`Dashboard`):** Main layout.
@@ -311,11 +327,12 @@ Dashboard views and diagnostic modules.
     *   **Lines 64-69 (`SeverityIcon`):** Maps alert severities to specific interface icons.
     *   **Lines 96-126:** Renders the main data table, using color-coded badges to denote severity (Critical, High, Medium, Low).
 
-#### 📄 [evidence/page.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/app/evidence/page.tsx) (114 Lines)
-*   **Purpose:** Explains the 9 forensic categories analyzed by the framework.
+#### 📄 [evidence/page.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/app/evidence/page.tsx)
+*   **Purpose:** Explains the 9 forensic categories analyzed by the framework and allows browsing of live indexed data.
 *   **Key Section Breakdown:**
-    *   **Lines 5-69 (`ARTIFACT_CATEGORIES`):** Array defining the purpose, targets (e.g., MFT tables, C2 beacons, mounting history), and icons for each category.
-    *   **Lines 87-111:** Grid display. Groups information inside frosted glass cards with color-coded layouts based on target indicators.
+    *   **`CATEGORY_INFO`:** Array defining the purpose, targets (e.g., MFT tables, C2 beacons, mounting history), and icons for each category.
+    *   **Live Metrics:** Hits the backend API to fetch real document counts for each category index.
+    *   **Interactive Viewer:** Includes an expandable dropdown on each card that queries Elasticsearch (`GET /api/artifacts/{category}`) and renders actual normalized forensic log hits inline.
 
 #### 📄 [models/page.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/app/models/page.tsx) (107 Lines)
 *   **Purpose:** Lists the formulas, categories, and metrics for the 6 Machine Learning models.
@@ -323,16 +340,13 @@ Dashboard views and diagnostic modules.
     *   **Lines 5-48 (`ML_MODELS`):** Array defining formulas (e.g. Shannon Entropy $H(X)$, GMM probability densities $f(x)$, Euclidean distances $d$) and performance statistics for each model.
     *   **Lines 70-104:** Cards showing formulas, icons, and description text for each model.
 
-#### 📄 [pipeline/page.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/app/pipeline/page.tsx) (408 Lines)
-*   **Purpose:** Ingest monitoring page. Shows database indexing metrics, stack statuses, and file upload areas.
+#### 📄 [pipeline/page.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/app/pipeline/page.tsx)
+*   **Purpose:** Ingest monitoring page. Shows LIVE database indexing metrics, stack statuses, and functional file upload areas.
 *   **Key Section Breakdown:**
-    *   **Lines 23-45 (`ELK_SERVICES`):** Statuses and server configurations for Elasticsearch, Kibana, and the FastAPI backend.
-    *   **Lines 48-139 (`INDEX_STATUS`):** Index names, document counts, storage usage, and statuses for each category.
-    *   **Lines 157-175 (`StatusDot`):** Glowing indicator icons.
-    *   **Lines 207-238:** Service health cards.
-    *   **Lines 256-318:** Renders cards detailing Elasticsearch index mappings and document metrics.
-    *   **Lines 330-356:** Interactive upload area that accepts files (.evtx, .sqlite, .pcap, etc.) via drag-and-drop.
-    *   **Lines 372-403:** Console screen displaying ingestion logs.
+    *   **Live Statuses:** Hits `GET /api/health` and `GET /api/pipeline/status` to render real connectivity indicators for Elasticsearch, Kibana, and the FastAPI backend, plus live document counts across all 9 indices.
+    *   **Functional Upload Zone:** An interactive drag-and-drop file upload target that pushes files (e.g., `.evtx`, `.sqlite`) to `POST /api/pipeline/ingest` via FormData.
+    *   **Ingestion Toasts:** Renders success/error banners dynamically based on the backend's parsing response (showing documents parsed, indexed, and duration).
+    *   **Offline Resilience:** Gracefully degrades to show "Elasticsearch is disconnected" warnings if the backend is unreachable, rather than crashing.
 
 #### 📄 [reports/page.tsx](file:///c:/Users/dhruv/Documents/AI-DFIR/frontend/src/app/reports/page.tsx) (496 Lines)
 *   **Purpose:** Generates incident reports. Includes case details, chain-of-custody logs, and exports.
