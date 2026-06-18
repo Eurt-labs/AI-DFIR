@@ -20,6 +20,7 @@ export interface HealthResponse {
     number_of_nodes?: number;
     active_shards?: number;
   };
+  elasticsearch_version?: string | null;
   services: {
     api: string;
     elasticsearch: string;
