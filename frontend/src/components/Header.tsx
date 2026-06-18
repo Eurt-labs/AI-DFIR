@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Search, Bell, ShieldAlert, Menu } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Search, Bell, ShieldAlert, Menu, Loader2, FileText, X } from "lucide-react";
+import { searchArtifacts, type SearchHit } from "@/lib/api";
 
 const RECENT_NOTIFICATIONS = [
   {
@@ -35,6 +36,15 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // ── Search state ──
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchHit[]>([]);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [searching, setSearching] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -44,13 +54,66 @@ export default function Header({ onMenuToggle }: HeaderProps) {
       ) {
         setNotifOpen(false);
       }
+      if (
+        searchDropdownRef.current &&
+        !searchDropdownRef.current.contains(e.target as Node)
+      ) {
+        setSearchOpen(false);
+      }
     }
-    if (notifOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Debounced search
+  const doSearch = useCallback(async (query: string) => {
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setSearchTotal(0);
+      setSearchOpen(false);
+      return;
     }
-  }, [notifOpen]);
+    setSearching(true);
+    setSearchOpen(true);
+    const result = await searchArtifacts(query, undefined, 8);
+    setSearchResults(result.hits);
+    setSearchTotal(result.total);
+    setSearching(false);
+  }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => doSearch(value), 350);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    doSearch(searchQuery);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchTotal(0);
+    setSearchOpen(false);
+  };
+
+  // Get a preview text from a search hit
+  const getPreview = (hit: SearchHit): string => {
+    const fields = ["message", "command", "url", "path", "process_name", "filename", "key_path", "title"];
+    for (const f of fields) {
+      if (hit[f] && typeof hit[f] === "string") return String(hit[f]);
+    }
+    return hit._id;
+  };
+
+  // Get the category from the index name
+  const getCategory = (hit: SearchHit): string => {
+    const idx = hit._index as string;
+    return idx.replace(/^dfir-/, "").split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  };
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-x-4 border-b border-white/5 bg-black/50 backdrop-blur-md px-4 lg:px-6 shadow-sm">
@@ -66,22 +129,87 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         </button>
 
         {/* Search */}
-        <form className="relative flex flex-1" action="#" method="GET">
-          <label htmlFor="search-field" className="sr-only">
-            Search
-          </label>
-          <Search
-            className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-white/30"
-            aria-hidden="true"
-          />
-          <input
-            id="search-field"
-            className="block h-full w-full border-0 bg-transparent py-0 pl-8 pr-0 text-white focus:ring-0 sm:text-sm placeholder:text-white/30 outline-none"
-            placeholder="Search indicators (IP, Hash, PID)..."
-            type="search"
-            name="search"
-          />
-        </form>
+        <div className="relative flex flex-1" ref={searchDropdownRef}>
+          <form className="relative flex flex-1" onSubmit={handleSearchSubmit}>
+            <label htmlFor="search-field" className="sr-only">
+              Search
+            </label>
+            <Search
+              className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-white/30"
+              aria-hidden="true"
+            />
+            <input
+              id="search-field"
+              className="block h-full w-full border-0 bg-transparent py-0 pl-8 pr-8 text-white focus:ring-0 sm:text-sm placeholder:text-white/30 outline-none"
+              placeholder="Search indicators (IP, Hash, PID)..."
+              type="search"
+              name="search"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              autoComplete="off"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-0 inset-y-0 flex items-center text-white/20 hover:text-white/50"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </form>
+
+          {/* Search results dropdown */}
+          {searchOpen && (
+            <div className="absolute left-0 top-full mt-2 w-full max-w-lg rounded-xl border border-white/10 bg-neutral-950/95 backdrop-blur-xl shadow-2xl shadow-black/50 z-50 overflow-hidden animate-fade-in-up">
+              {searching ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 size={16} className="text-cyan-400 animate-spin mr-2" />
+                  <span className="text-xs text-white/40 font-mono">Searching...</span>
+                </div>
+              ) : searchResults.length > 0 ? (
+                <>
+                  <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-white/40">
+                      {searchTotal} result{searchTotal !== 1 ? "s" : ""} for &quot;{searchQuery}&quot;
+                    </span>
+                  </div>
+                  <div className="divide-y divide-white/5 max-h-72 overflow-y-auto">
+                    {searchResults.map((hit, i) => (
+                      <div
+                        key={hit._id || i}
+                        className="px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText size={10} className="text-cyan-400/60 shrink-0" />
+                          <span className="text-[9px] font-mono text-cyan-400/60 uppercase">
+                            {getCategory(hit)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/70 font-mono truncate">
+                          {getPreview(hit)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {searchTotal > 8 && (
+                    <div className="px-4 py-2.5 border-t border-white/5 text-center">
+                      <span className="text-[9px] font-mono text-white/30">
+                        Showing 8 of {searchTotal} results
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="py-6 text-center">
+                  <p className="text-xs text-white/30 font-mono">
+                    No results for &quot;{searchQuery}&quot;
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Right side: status, notifications, profile */}

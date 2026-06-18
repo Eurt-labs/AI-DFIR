@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
+
+import { getPipelineStatus, getHealth, type PipelineStatus, type HealthResponse } from "@/lib/api";
 
 import {
   Activity,
@@ -234,6 +236,26 @@ export default function Dashboard() {
   const currentTCS = 0.75;
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // ── Live API Data ──
+  const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus | null>(null);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+
+  const fetchLiveData = useCallback(async () => {
+    const [ps, h] = await Promise.all([getPipelineStatus(), getHealth()]);
+    setPipelineStatus(ps);
+    setHealth(h);
+  }, []);
+
+  useEffect(() => {
+    fetchLiveData();
+    // Refresh every 30s
+    const interval = setInterval(fetchLiveData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchLiveData]);
+
+  const liveEvidenceCount = pipelineStatus?.total_documents ?? 53535;
+  const isSystemOnline = health?.status === "online";
+
   // GSAP scroll-triggered entrance animations
   useGSAP(
     () => {
@@ -283,7 +305,7 @@ export default function Dashboard() {
       {/* ── Quick Stats Row ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 dashboard-row">
         <AnimatedStatCard label="Active Alerts" rawValue={14} icon={ShieldAlert} color="text-pink-500" bg="bg-pink-500/10" index={0} />
-        <AnimatedStatCard label="Evidence Parsed" rawValue={53535} icon={FileSearch} color="text-cyan-400" bg="bg-cyan-500/10" index={1} />
+        <AnimatedStatCard label="Evidence Parsed" rawValue={liveEvidenceCount} icon={FileSearch} color="text-cyan-400" bg="bg-cyan-500/10" index={1} />
         <AnimatedStatCard label="Traffic Velocity" rawValue={3412} suffix="Pkt/s" icon={Network} color="text-purple-400" bg="bg-purple-500/10" index={2} />
         <AnimatedStatCard label="CPU Intel" rawValue={42.1} suffix="%" icon={Cpu} color="text-emerald-400" bg="bg-emerald-500/10" index={3} />
       </div>
