@@ -17,6 +17,18 @@ logger = logging.getLogger("dfir.router.pipeline")
 router = APIRouter()
 
 
+@router.get("/supported-types")
+async def supported_types():
+    """List file types supported for ingestion."""
+    from app.services.ingest_service import FILE_TYPE_MAP
+
+    types = []
+    for ext, (category, _) in FILE_TYPE_MAP.items():
+        types.append({"extension": ext, "category": category})
+
+    return {"supported": types}
+
+
 @router.get("/status")
 async def pipeline_status():
     """Get overall pipeline status and per-index stats."""

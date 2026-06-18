@@ -14,11 +14,21 @@ async def health_check():
     """Overall system health check."""
     es_health = await es_service.health()
 
+    # Get ES version if connected
+    es_version = None
+    if es_service.is_connected and es_service.client:
+        try:
+            info = await es_service.client.info()
+            es_version = info["version"]["number"]
+        except Exception:
+            pass
+
     return {
         "status": "online",
         "app": settings.app_name,
         "version": settings.app_version,
         "elasticsearch": es_health,
+        "elasticsearch_version": es_version,
         "services": {
             "api": "healthy",
             "elasticsearch": "connected" if es_service.is_connected else "disconnected",

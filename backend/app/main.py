@@ -83,5 +83,6 @@ async def root():
         "name": settings.app_name,
         "version": settings.app_version,
         "status": "online",
+        "elasticsearch_connected": es_service.is_connected,
         "docs": "/docs",
     }
