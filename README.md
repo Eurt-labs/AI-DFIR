@@ -1,7 +1,5 @@
 # AI-Assisted Digital Forensics & Cyber Threat Investigation Framework
 
-![AI-DFIR Header](docs/assets/header.png)
-
 > **NIST SP 800-86 Aligned · 6 ML Models · 9 Artifact Categories · 7-Phase Workflow · Python + Next.js**
 
 ---
