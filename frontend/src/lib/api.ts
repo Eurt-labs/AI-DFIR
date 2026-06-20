@@ -152,7 +152,7 @@ export async function uploadFile(file: File): Promise<IngestResult> {
     }
 
     return (await res.json()) as IngestResult;
-  } catch (err) {
+  } catch {
     return {
       filename: file.name,
       category: "unknown",
