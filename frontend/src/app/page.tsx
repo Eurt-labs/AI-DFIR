@@ -247,6 +247,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLiveData();
     // Refresh every 30s
     const interval = setInterval(fetchLiveData, 30000);
@@ -254,7 +255,6 @@ export default function Dashboard() {
   }, [fetchLiveData]);
 
   const liveEvidenceCount = pipelineStatus?.total_documents ?? 53535;
-  const isSystemOnline = health?.status === "online";
 
   // GSAP scroll-triggered entrance animations
   useGSAP(
