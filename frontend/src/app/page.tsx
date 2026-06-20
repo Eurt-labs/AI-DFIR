@@ -7,7 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-import { getPipelineStatus, getHealth, type PipelineStatus, type HealthResponse } from "@/lib/api";
+import { getPipelineStatus, type PipelineStatus } from "@/lib/api";
 
 import {
   Activity,
@@ -238,12 +238,10 @@ export default function Dashboard() {
 
   // ── Live API Data ──
   const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus | null>(null);
-  const [health, setHealth] = useState<HealthResponse | null>(null);
 
   const fetchLiveData = useCallback(async () => {
-    const [ps, h] = await Promise.all([getPipelineStatus(), getHealth()]);
+    const ps = await getPipelineStatus();
     setPipelineStatus(ps);
-    setHealth(h);
   }, []);
 
   useEffect(() => {
