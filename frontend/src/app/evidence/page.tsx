@@ -14,7 +14,6 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  FileText,
 } from "lucide-react";
 import {
   getCategories,
@@ -119,13 +118,14 @@ function ArtifactCard({
   category: string;
   stat: CategoryStat | undefined;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const [artifacts, setArtifacts] = useState<SearchHit[]>([]);
+  const [loadingArtifacts, setLoadingArtifacts] = useState(false);
+
   const info = CATEGORY_INFO[category];
   if (!info) return null;
 
   const colors = colorMap[info.color];
-  const [expanded, setExpanded] = useState(false);
-  const [artifacts, setArtifacts] = useState<SearchHit[]>([]);
-  const [loadingArtifacts, setLoadingArtifacts] = useState(false);
   const docsCount = stat?.docs_count ?? 0;
 
   const loadArtifacts = async () => {
@@ -266,6 +266,7 @@ export default function EvidencePage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCategories();
   }, [fetchCategories]);
 
