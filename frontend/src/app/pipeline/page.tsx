@@ -14,7 +14,6 @@ import {
   Server,
   CheckCircle2,
   Upload,
-  Zap,
   BarChart3,
   RefreshCw,
   AlertCircle,
@@ -164,6 +163,7 @@ export default function PipelinePage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
 
