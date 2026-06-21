@@ -1,0 +1,34 @@
+filebeat.inputs:
+
+# Syslog and Text Logs
+- type: filestream
+  id: dfir-syslog
+  enabled: true
+  paths:
+    - /usr/share/filebeat/evidence/syslog/*.log
+  tags: ["syslog"]
+
+# EVTX files (Parsed into JSON by external scripts, or read directly if using specific integrations)
+- type: filestream
+  id: dfir-evtx
+  enabled: true
+  paths:
+    - /usr/share/filebeat/evidence/evtx/*.json
+    - /usr/share/filebeat/evidence/evtx/*.evtx
+  tags: ["evtx"]
+
+# Parsed SQLite databases (JSON lines format)
+- type: filestream
+  id: dfir-sqlite
+  enabled: true
+  paths:
+    - /usr/share/filebeat/evidence/sqlite/*.json
+  tags: ["sqlite"]
+
+# Output to Logstash instead of directly to Elasticsearch
+output.logstash:
+  hosts: ["logstash:5044"]
+
+# Optional Kibana setup (if loading filebeat dashboards)
+setup.kibana:
+  host: "http://kibana:5601"
