@@ -68,6 +68,35 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # ── Logstash ──
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.0
+    container_name: dfir-logstash
+    environment:
+      - xpack.monitoring.enabled=false
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    networks:
+      - dfir-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # ── Filebeat ──
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.15.0
+    container_name: dfir-filebeat
+    user: root
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./evidence:/usr/share/filebeat/evidence:ro
+    networks:
+      - dfir-network
+    depends_on:
+      - logstash
+
 volumes:
   es-data:
     driver: local
